@@ -16,6 +16,14 @@ entryPoints:
   websecure:
     address: :443
 
+certificatesResolvers:
+  le:
+    acme:
+      email: simplymailmatthew7@gmail.com
+      storage: acme.json
+      httpChallenge:
+        entryPoint: web
+
 providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
