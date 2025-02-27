@@ -163,9 +163,12 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(traefik.mattaudu.xyz)"
       - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=dashboard"
       - "traefik.http.routers.dashboard.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$ruca84Hq$$mbjdMZBAG.KWn7vfN/SNK/"  # admin:password
+      - "traefik.http.routers.dashboard-domain.entrypoints=websecure"
+      - "traefik.http.routers.dashboard-domain.tls=true"
+      - "traefik.http.routers.dashboard-domain.tls.certresolver=myresolver"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=8087"
     restart: unless-stopped
 
 networks:
