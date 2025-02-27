@@ -63,6 +63,7 @@ services:
     ports:
       - "8082:8082"
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.todos-api-domain.rule=Host(`todos.mattaudu.xyz`)"
       - "traefik.http.routers.todos-api-domain.entrypoints=websecure"
       - "traefik.http.routers.todos-api-domain.tls=true"
