@@ -28,5 +28,3 @@ providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
-  file:
-    filename: "/etc/traefik/dynamic_conf.yml"

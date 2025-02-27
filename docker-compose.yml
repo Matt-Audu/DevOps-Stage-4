@@ -19,10 +19,12 @@ services:
       - redis-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`audu.zapto.org`)"
+      - "traefik.http.routers.frontend.rule=Host(audu.zapto.org)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
       
 
   auth-api:
@@ -37,11 +39,12 @@ services:
     ports:
       - "8081:8081"
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.auth-api.rule=Host(`audu.zapto.org`) && PathPrefix(`/api/auth`)"
-      - "traefik.http.routers.auth-api.entrypoints=websecure"
+      - "traefik.http.routers.auth-api-path.rule=Host(audu.zapto.org) && PathPrefix(/api/auth)"
+      - "traefik.http.routers.auth-api-path.entrypoints=websecure"
+      - "traefik.http.routers.auth-api-path.tls=true"
+      - "traefik.http.middlewares.auth-strip-prefix.stripprefix.prefixes=/api/auth"
+      - "traefik.http.routers.auth-api-path.middlewares=auth-strip-prefix"
       - "traefik.http.services.auth-api.loadbalancer.server.port=8081"
-      - "traefik.http.routers.auth-api.tls.certresolver=letsencrypt"
     depends_on:
       - redis-queue
     networks:
@@ -60,11 +63,12 @@ services:
     ports:
       - "8082:8082"
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.todos-api.rule=Host(`audu.zapto.org`) && PathPrefix(`/api/todos`)"
-      - "traefik.http.routers.todos-api.entrypoints=websecure"
+      - "traefik.http.routers.todos-api-path.rule=Host(audu.zapto.org) && PathPrefix(/api/todos)"
+      - "traefik.http.routers.todos-api-path.entrypoints=websecure"
+      - "traefik.http.routers.todos-api-path.tls=true"
+      - "traefik.http.middlewares.todos-strip-prefix.stripprefix.prefixes=/api/todos"
+      - "traefik.http.routers.todos-api-path.middlewares=todos-strip-prefix"
       - "traefik.http.services.todos-api.loadbalancer.server.port=8082"
-      - "traefik.http.routers.todos-api.tls.certresolver=letsencrypt"
   
     depends_on:
       - redis-queue
@@ -82,11 +86,12 @@ services:
     ports:
       - "8083:8083"
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.users-api.rule=Host(`audu.zapto.org`) && PathPrefix(`/api/users`)"
-      - "traefik.http.routers.users-api.entrypoints=websecure"
+      - "traefik.http.routers.users-api-path.rule=Host(audu.zapto.org) && PathPrefix(/api/users)"
+      - "traefik.http.routers.users-api-path.entrypoints=websecure"
+      - "traefik.http.routers.users-api-path.tls=true"
+      - "traefik.http.middlewares.users-strip-prefix.stripprefix.prefixes=/api/users"
+      - "traefik.http.routers.users-api-path.middlewares=users-strip-prefix"
       - "traefik.http.services.users-api.loadbalancer.server.port=8083"
-      - "traefik.http.routers.service1.tls.certresolver=letsencrypt"
     depends_on:
       - redis-queue
     networks:
@@ -130,24 +135,27 @@ services:
     container_name: traefik
     command:             
       - --providers.docker=true             
-      - --providers.docker.exposedbydefault=false  
+      - --providers.docker.exposedbydefault=false
+      - --providers.file.directory=/etc/traefik/config
+      - --certificatesresolvers.myresolver.acme.tlschallenge=true
+      - --certificatesresolvers.myresolver.acme.email=simplymailmatthew7@gmail.com
+      - --certificatesresolvers.myresolver.acme.storage=/etc/traefik/acme/acme.json 
     ports:
       - 80:80
       - 443:443
       - 8087:8080
     volumes:
-      - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./var/run/docker.sock:/var/run/docker.sock:ro
-      - ./dynamic_conf.yml:/etc/traefik/dynamic_conf.yml
-      - ./letsencrypt:/letsencrypt
+      - ./traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./traefik/acme:/etc/traefik/acme
+      - ./traefik/config/:/etc/traefik
+
     networks:
       - redis-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`audu.zapto.org`)"
-      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.services.traefik.loadbalancer.server.port=80"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=dashboard"
     restart: unless-stopped
 
 networks:
