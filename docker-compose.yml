@@ -19,7 +19,7 @@ services:
       - redis-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(audu.zapto.org)"
+      - "traefik.http.routers.frontend.rule=Host(`mattaudu.xyz`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
@@ -39,12 +39,11 @@ services:
     ports:
       - "8081:8081"
     labels:
-      - "traefik.http.routers.auth-api-path.rule=Host(audu.zapto.org) && PathPrefix(/api/auth)"
-      - "traefik.http.routers.auth-api-path.entrypoints=websecure"
-      - "traefik.http.routers.auth-api-path.tls=true"
-      - "traefik.http.middlewares.auth-strip-prefix.stripprefix.prefixes=/api/auth"
-      - "traefik.http.routers.auth-api-path.middlewares=auth-strip-prefix"
-      - "traefik.http.services.auth-api.loadbalancer.server.port=8081"
+      - "traefik.http.routers.auth-api-domain.rule=Host(`auth.mattaudu.xyz`)"
+      - "traefik.http.routers.auth-api-domain.entrypoints=websecure"
+      - "traefik.http.routers.auth-api-domain.tls=true"
+      - "traefik.http.routers.auth-api-domain.tls.certresolver=myresolver"
+
     depends_on:
       - redis-queue
     networks:
@@ -63,12 +62,11 @@ services:
     ports:
       - "8082:8082"
     labels:
-      - "traefik.http.routers.todos-api-path.rule=Host(audu.zapto.org) && PathPrefix(/api/todos)"
-      - "traefik.http.routers.todos-api-path.entrypoints=websecure"
-      - "traefik.http.routers.todos-api-path.tls=true"
-      - "traefik.http.middlewares.todos-strip-prefix.stripprefix.prefixes=/api/todos"
-      - "traefik.http.routers.todos-api-path.middlewares=todos-strip-prefix"
-      - "traefik.http.services.todos-api.loadbalancer.server.port=8082"
+      - "traefik.http.routers.auth-api-domain.rule=Host(`todos.mattaudu.xyz`)"
+      - "traefik.http.routers.auth-api-domain.entrypoints=websecure"
+      - "traefik.http.routers.auth-api-domain.tls=true"
+      - "traefik.http.routers.auth-api-domain.tls.certresolver=myresolver"
+
   
     depends_on:
       - redis-queue
@@ -86,12 +84,10 @@ services:
     ports:
       - "8083:8083"
     labels:
-      - "traefik.http.routers.users-api-path.rule=Host(audu.zapto.org) && PathPrefix(/api/users)"
-      - "traefik.http.routers.users-api-path.entrypoints=websecure"
-      - "traefik.http.routers.users-api-path.tls=true"
-      - "traefik.http.middlewares.users-strip-prefix.stripprefix.prefixes=/api/users"
-      - "traefik.http.routers.users-api-path.middlewares=users-strip-prefix"
-      - "traefik.http.services.users-api.loadbalancer.server.port=8083"
+      - "traefik.http.routers.auth-api-domain.rule=Host(`users.mattaudu.xyz`)"
+      - "traefik.http.routers.auth-api-domain.entrypoints=websecure"
+      - "traefik.http.routers.auth-api-domain.tls=true"
+      - "traefik.http.routers.auth-api-domain.tls.certresolver=myresolver"
     depends_on:
       - redis-queue
     networks:
@@ -154,6 +150,7 @@ services:
       - redis-network
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(traefik.mattaudu.xyz)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=dashboard"
     restart: unless-stopped
