@@ -21,7 +21,7 @@ http:
           - DELETE
           - OPTIONS
         accessControlAllowOriginList:
-          - "https://domain.com"
+          - "https://mattaudu.xyz"
         accessControlAllowCredentials: true
         accessControlMaxAge: 100
         addVaryHeader: true

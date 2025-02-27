@@ -23,7 +23,7 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
 
       
 
@@ -39,11 +39,12 @@ services:
     ports:
       - "8081:8081"
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.auth-api-domain.rule=Host(`auth.mattaudu.xyz`)"
       - "traefik.http.routers.auth-api-domain.entrypoints=websecure"
       - "traefik.http.routers.auth-api-domain.tls=true"
       - "traefik.http.routers.auth-api-domain.tls.certresolver=myresolver"
-
+      - "traefik.http.services.auth-api.loadbalancer.server.port=8081"
     depends_on:
       - redis-queue
     networks:
@@ -62,12 +63,11 @@ services:
     ports:
       - "8082:8082"
     labels:
-      - "traefik.http.routers.auth-api-domain.rule=Host(`todos.mattaudu.xyz`)"
-      - "traefik.http.routers.auth-api-domain.entrypoints=websecure"
-      - "traefik.http.routers.auth-api-domain.tls=true"
-      - "traefik.http.routers.auth-api-domain.tls.certresolver=myresolver"
-
-  
+      - "traefik.http.routers.todos-api-domain.rule=Host(`todos.mattaudu.xyz`)"
+      - "traefik.http.routers.todos-api-domain.entrypoints=websecure"
+      - "traefik.http.routers.todos-api-domain.tls=true"
+      - "traefik.http.routers.todos-api-domain.tls.certresolver=myresolver"
+      - "traefik.http.services.todos-api.loadbalancer.server.port=8082"
     depends_on:
       - redis-queue
     networks:
@@ -84,10 +84,12 @@ services:
     ports:
       - "8083:8083"
     labels:
-      - "traefik.http.routers.auth-api-domain.rule=Host(`users.mattaudu.xyz`)"
-      - "traefik.http.routers.auth-api-domain.entrypoints=websecure"
-      - "traefik.http.routers.auth-api-domain.tls=true"
-      - "traefik.http.routers.auth-api-domain.tls.certresolver=myresolver"
+      - "traefik.enable=true"
+      - "traefik.http.routers.users-api-domain.rule=Host(`users.mattaudu.xyz`)"
+      - "traefik.http.routers.users-api-domain.entrypoints=websecure"
+      - "traefik.http.routers.users-api-domain.tls=true"
+      - "traefik.http.routers.users-api-domain.tls.certresolver=myresolver"
+      - "traefik.http.services.users-api.loadbalancer.server.port=8083"
     depends_on:
       - redis-queue
     networks:
@@ -127,32 +129,42 @@ services:
 
 
   traefik:
-    image: docker.io/library/traefik:v3.3.3
+    image: traefik:v2.6
     container_name: traefik
     command:             
-      - --providers.docker=true             
-      - --providers.docker.exposedbydefault=false
+      - --api.insecure=true
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
       - --providers.file.directory=/etc/traefik/config
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.dashboard.address=:8087
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entryPoint.permanent=true
+      # Let's Encrypt configuration
       - --certificatesresolvers.myresolver.acme.tlschallenge=true
       - --certificatesresolvers.myresolver.acme.email=simplymailmatthew7@gmail.com
-      - --certificatesresolvers.myresolver.acme.storage=/etc/traefik/acme/acme.json 
+      - --certificatesresolvers.myresolver.acme.storage=/etc/traefik/acme/acme.json
     ports:
       - 80:80
       - 443:443
       - 8087:8080
     volumes:
-      - ./traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/config:/etc/traefik
       - ./traefik/acme:/etc/traefik/acme
-      - ./traefik/config/:/etc/traefik
-
     networks:
       - redis-network
     labels:
+      - --log.level=INFO
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(traefik.mattaudu.xyz)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=dashboard"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$ruca84Hq$$mbjdMZBAG.KWn7vfN/SNK/"  # admin:password
     restart: unless-stopped
 
 networks:
