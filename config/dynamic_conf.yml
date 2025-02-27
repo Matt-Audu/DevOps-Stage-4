@@ -1,0 +1,14 @@
+# dynamic_conf.yml
+http:
+  routers:
+    myapp:
+      rule: "Host(`audu.zapto.org`)" # Replace with your subdomain
+      service: "frontend"
+      tls:
+        certResolver: "letsencrypt"
+
+  services:
+    myapp:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8080" # Replace with your app's URL

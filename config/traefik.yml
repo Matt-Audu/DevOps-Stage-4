@@ -17,14 +17,16 @@ entryPoints:
     address: :443
 
 certificatesResolvers:
-  le:
+  letsencrypt:
     acme:
-      email: simplymailmatthew7@gmail.com
-      storage: acme.json
+      email: "simplymailmatthew7@gmail.com"
+      storage: "/letsencrypt/acme.json"
       httpChallenge:
-        entryPoint: web
+        entryPoint: "web"
 
 providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
+  file:
+    filename: "/etc/traefik/dynamic_conf.yml"
